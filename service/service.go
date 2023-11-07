@@ -106,7 +106,20 @@ func (s *service) UpdateTask(req model.TaskReq, ImageURL string, Id int) (model.
 	return data, nil
 }
 
-//AUTH
+func (s *service) Regis(email string, password string) (model.UserRegisRespon, error) {
+
+	HasPassword, err := helpers.HashPassword(password)
+	if err != nil {
+		return model.UserRegisRespon{}, err
+	}
+
+	data, err := s.repository.Regis(email, HasPassword)
+	if err != nil {
+		return model.UserRegisRespon{}, err
+	}
+	return data, nil
+}
+
 func (s *service) Login(email string, password string) (model.UserLogRespon, error) {
 	data, err := s.repository.Login(email)
 	if err != nil {
@@ -120,20 +133,6 @@ func (s *service) Login(email string, password string) (model.UserLogRespon, err
 	if !match {
 		return model.UserLogRespon{}, err
 	}
-	return data, nil
-}
-
-func (s *service) Regis(email string, password string) (model.UserRegisRespon, error) {
-
-	HasPassword, err := helpers.HashPassword(password)
-		if err != nil {
-			return model.UserRegisRespon{}, err
-		}
-
-	data, err := s.repository.Regis(email, HasPassword)
-		if err != nil {
-			return model.UserRegisRespon{}, err
-		}
 	return data, nil
 }
 

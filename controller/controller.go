@@ -274,6 +274,7 @@ func (c *Controller) Login(ctx echo.Context) error {
 		"data":    data,
 	})
 }
+
 func (c *Controller) RegisterController(ctx echo.Context) error {
 	var req model.UserRegis
 	err := ctx.Bind(&req)

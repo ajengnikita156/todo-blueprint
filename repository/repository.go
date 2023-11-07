@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"fmt"
 	"membuattasktodo/model"
 	"time"
-"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -24,7 +25,6 @@ type Repository interface {
 	CreateKategori(kategori model.KategoriReq) (model.Kategori, error)
 	DeleteKategori(Id int) error
 	EditKategori(Id int, kategori model.KategoriReq) (model.Kategori, error)
-	
 }
 
 type repository struct {
@@ -211,7 +211,25 @@ func (r *repository) UpdateTasks(arg model.TaskReq, parseDate time.Time, imageUR
 	return task, nil
 }
 
-//AUTH
+func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRespon, error) {
+	var db = r.db
+	var regis = model.UserRegisRespon{}
+
+	fmt.Println(email, HasPassword)
+	query := `
+		INSERT INTO users (email, password, created_at)
+		VALUES ( $1, $2, now())
+		RETURNING id, email, created_at`
+
+	row := db.QueryRowx(query, email, HasPassword)
+	err := row.Scan(&regis.ID, &regis.Email, &regis.CreatedAt)
+	if err != nil {
+		return model.UserRegisRespon{}, err
+	}
+
+	return regis, nil
+}
+// AUTH
 func (r *repository) Login(email string) (model.UserLogRespon, error) {
 	var db = r.db
 	var login = model.UserLogRespon{}
@@ -224,25 +242,6 @@ func (r *repository) Login(email string) (model.UserLogRespon, error) {
 	}
 
 	return login, nil
-}
-
-func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRespon, error) {
-	var db = r.db
-	var regis = model.UserRegisRespon{}
-
-	fmt.Println(email, HasPassword)
-	query := `
-		INSERT INTO users (email, password,ted_at)
-		VALUES ( $1, $2, now()) crea
-		RETURNING id, email, created_at`
-
-	row := db.QueryRowx(query, email, HasPassword)
-	err := row.Scan(&regis.ID, &regis.Email, &regis.CreatedAt)
-	if err != nil {
-		return model.UserRegisRespon{}, err
-	}
-
-	return regis, nil
 }
 
 func (r *repository) SaveToken(token string, userId int) error {
