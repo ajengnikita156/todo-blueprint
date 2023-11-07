@@ -124,16 +124,16 @@ func (s *service) Login(email string, password string) (model.UserLogRespon, err
 }
 
 func (s *service) Regis(email string, password string) (model.UserRegisRespon, error) {
-	data, err := s.repository.Regis(email, password)
-	if err != nil {
-		return model.UserRegisRespon{}, err
-	}
 
-	password, err = helpers.HashPassword(password)
+	HasPassword, err := helpers.HashPassword(password)
 		if err != nil {
 			return model.UserRegisRespon{}, err
 		}
 
+	data, err := s.repository.Regis(email, HasPassword)
+		if err != nil {
+			return model.UserRegisRespon{}, err
+		}
 	return data, nil
 }
 

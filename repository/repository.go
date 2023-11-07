@@ -3,7 +3,7 @@ package repository
 import (
 	"membuattasktodo/model"
 	"time"
-
+"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,10 +16,8 @@ type Repository interface {
 	DeleteTask(Id int) error
 	BulkDeleteTask(taskIds []int, Id int) error
 	Login(email string) (model.UserLogRespon, error)
-	Regis(email string, password string) (model.UserRegisRespon, error)
+	Regis(email string, HasPassword string) (model.UserRegisRespon, error)
 	SaveToken(token string, userId int) error
-
-
 
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
@@ -228,17 +226,18 @@ func (r *repository) Login(email string) (model.UserLogRespon, error) {
 	return login, nil
 }
 
-func (r *repository) Regis(email string, password string) (model.UserRegisRespon, error) {
+func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRespon, error) {
 	var db = r.db
 	var regis = model.UserRegisRespon{}
 
+	fmt.Println(email, HasPassword)
 	query := `
-		INSERT INTO users (email, password, created_at)
-		VALUES ( $1, $2, now())
-		RETURNING id, email, created_at `
+		INSERT INTO users (email, password,ted_at)
+		VALUES ( $1, $2, now()) crea
+		RETURNING id, email, created_at`
 
-	row := db.QueryRowx(query, email, password)
-	err := row.Scan(&regis.ID, &regis.Email, &regis.CreatedAt, &regis.UpdatedAt)
+	row := db.QueryRowx(query, email, HasPassword)
+	err := row.Scan(&regis.ID, &regis.Email, &regis.CreatedAt)
 	if err != nil {
 		return model.UserRegisRespon{}, err
 	}
