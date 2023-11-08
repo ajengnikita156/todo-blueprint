@@ -21,6 +21,7 @@ type Service interface {
 	SaveToken(token string, userId int) error
 	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
 	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
+	CountTask(Id int) (model.Count, error)
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
 	CreateKategori(req model.KategoriReq) (model.Kategori, error)
@@ -168,6 +169,16 @@ func (s *service) SearchTasks(id int, keywoard string, parsedDate time.Time, lim
     data, err := s.repository.SearchTasks(id, keywoard, parsedDate, limit, offset)
 	if err != nil {
 		return []model.TaskRes{}, err
+	}
+
+	return data, nil
+}
+
+
+func (s *service) CountTask(Id int) (model.Count, error) {
+	data, err := s.repository.CountTask(Id)
+	if err != nil {
+		return model.Count{}, err
 	}
 
 	return data, nil

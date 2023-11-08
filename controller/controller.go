@@ -266,7 +266,7 @@ func (c *Controller) SearchTasksFormController(ctx echo.Context) (err error) {
 	if count%limit != 0 {
 		totalPages++
 	}
-	
+
 	if len(users) == 0 {
 		users = []model.TaskRes{}
 	}
@@ -277,6 +277,22 @@ func (c *Controller) SearchTasksFormController(ctx echo.Context) (err error) {
 		"limit_page":  limit,
 		"total_data":  count,
 		"total_pages": totalPages,
+	})
+}
+
+
+func (c *Controller) CountTask(ctx echo.Context) error {
+	claims := helpers.ClaimToken(ctx)
+	id := claims.ID
+
+	data, err := c.service.CountTask(id)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, map[string]interface{}{
+		"Message": "successfully displays status data",
+		"data":    data,
 	})
 }
 

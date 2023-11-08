@@ -49,6 +49,7 @@ func Init() error {
 	task.DELETE("/:id", controller.DeleteTasksController)
 	task.DELETE("", controller.BulkDeleteTask)
 	task.POST("", controller.SearchTasksFormController)
+	task.GET("/count", controller.CountTask)
 
 	//AUTH
 	e.POST("/login", controller.Login)

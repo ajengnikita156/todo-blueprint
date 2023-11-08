@@ -22,6 +22,7 @@ type Repository interface {
 	SaveToken(token string, userId int) error
 	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
 	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
+	CountTask(Id int) (model.Count, error)
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
 	CreateKategori(kategori model.KategoriReq) (model.Kategori, error)
@@ -285,6 +286,29 @@ func (r *repository) SearchTasks(id int, keywoard string, parsedDate time.Time, 
 
 	return users, nil
 }
+
+func (r *repository) CountTask(Id int) (model.Count, error) {
+	var (
+		db    = r.db
+		count = model.Count{}
+	)
+
+	query := `SELECT 
+				SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
+				SUM(CASE WHEN status = 'progress' THEN 1 ELSE 0 END) AS progress,
+				SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) AS done
+			FROM tasks 
+			WHERE id_user = $1`
+
+	err := db.Get(&count, query, Id)
+	if err != nil {
+		return model.Count{}, err
+	}
+
+	return count, err
+}
+
+
 
 // AUTH
 func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRespon, error) {
