@@ -44,13 +44,15 @@ func Init() error {
 
 	task.GET("", controller.GetAlltaskController)
 	task.GET("/:id", controller.GetTaskById)
-	task.POST("", controller.CreateTasksController)
+	task.POST("/add", controller.CreateTasksController)
 	task.PUT("/:id", controller.UpdateTaskController)
 	task.DELETE("/:id", controller.DeleteTasksController)
 	task.DELETE("", controller.BulkDeleteTask)
+	task.POST("", controller.SearchTasksFormController)
 
 	//AUTH
 	e.POST("/login", controller.Login)
+	e.POST("/logout", controller.Logout)
 	e.POST("/register", controller.RegisterController)
 
 	//kategori

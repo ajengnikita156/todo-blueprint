@@ -17,9 +17,11 @@ type Repository interface {
 	DeleteTask(Id int) error
 	BulkDeleteTask(taskIds []int, Id int) error
 	Login(email string) (model.UserLogRespon, error)
+	Logout(reqToken string) error
 	Regis(email string, HasPassword string) (model.UserRegisRespon, error)
 	SaveToken(token string, userId int) error
-
+	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
+	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
 	CreateKategori(kategori model.KategoriReq) (model.Kategori, error)
@@ -211,6 +213,80 @@ func (r *repository) UpdateTasks(arg model.TaskReq, parseDate time.Time, imageUR
 	return task, nil
 }
 
+func (r *repository) CountTasks(id int, keywoard string, parsedDate time.Time) (int, error) {
+	var (
+		db = r.db
+	)
+	totalQuery := `SELECT COUNT(*) FROM tasks WHERE id_user = $1`
+
+	if !parsedDate.IsZero() {
+		totalQuery += fmt.Sprintf(" AND date::date = '%s'", parsedDate.Format("2006-01-02"))
+	}
+
+	if keywoard != "" {
+		totalQuery += fmt.Sprintf(" AND (tittle ILIKE '%s' OR description ILIKE '%s')", keywoard, keywoard)
+	}
+
+	var count int
+	err := db.Get(&count, totalQuery, id)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *repository) SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error) {
+	var (
+		db = r.db
+	)
+
+	query := `SELECT id, tittle, description, status, date, image, created_at, updated_at, id_user FROM tasks WHERE id_user = $1`
+
+	keywoard = "%" + keywoard + "%"
+
+	if !parsedDate.IsZero() {
+		query += fmt.Sprintf(" AND date::date = '%s'", parsedDate.Format("2006-01-02"))
+	}
+
+	if keywoard != "" {
+		query += fmt.Sprintf(" AND (tittle ILIKE '%s' OR description ILIKE '%s')", keywoard, keywoard)
+	}
+
+	query += " LIMIT $2 OFFSET $3"
+
+	rows, err := db.Query(query, id, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []model.TaskRes
+
+	for rows.Next() {
+		var user model.TaskRes
+		err = rows.Scan(
+			&user.ID,
+			&user.Tittle,
+			&user.Description,
+			&user.Status,
+			&user.Date,
+			&user.Image,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.IdUser,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+// AUTH
 func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRespon, error) {
 	var db = r.db
 	var regis = model.UserRegisRespon{}
@@ -229,7 +305,7 @@ func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRes
 
 	return regis, nil
 }
-// AUTH
+
 func (r *repository) Login(email string) (model.UserLogRespon, error) {
 	var db = r.db
 	var login = model.UserLogRespon{}
@@ -242,6 +318,20 @@ func (r *repository) Login(email string) (model.UserLogRespon, error) {
 	}
 
 	return login, nil
+}
+
+func (r *repository) Logout(reqToken string) error {
+	var (
+		db = r.db
+	)
+
+	query := `DELETE FROM user_token WHERE token = $1`
+
+	_, err := db.Exec(query, reqToken)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *repository) SaveToken(token string, userId int) error {

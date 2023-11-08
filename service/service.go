@@ -16,9 +16,11 @@ type Service interface {
 	DeleteTask(Id int) error
 	BulkDeleteTask(taskIds []int, Id int) error
 	Login(email string, password string) (model.UserLogRespon, error)
+	Logout(reqToken string) error
 	Regis(email string, password string) (model.UserRegisRespon, error)
 	SaveToken(token string, userId int) error
-
+	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
+	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
 	CreateKategori(req model.KategoriReq) (model.Kategori, error)
@@ -136,6 +138,14 @@ func (s *service) Login(email string, password string) (model.UserLogRespon, err
 	return data, nil
 }
 
+func (s *service) Logout(reqToken string) error {
+	err := s.repository.Logout(reqToken)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 func (s *service) SaveToken(token string, userId int) error {
 	err := s.repository.SaveToken(token, userId)
 	if err != nil {
@@ -145,7 +155,23 @@ func (s *service) SaveToken(token string, userId int) error {
 	return nil
 }
 
+func (s *service) CountTasks(id int, keywoard string, parsedDate time.Time) (int, error) {
+	data, err := s.repository.CountTasks(id, keywoard, parsedDate)
+	if err != nil {
+		return data, err
+	}
 
+	return data, nil
+}
+
+func (s *service) SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error) {
+    data, err := s.repository.SearchTasks(id, keywoard, parsedDate, limit, offset)
+	if err != nil {
+		return []model.TaskRes{}, err
+	}
+
+	return data, nil
+}
 
 // KATEGORI
 func (s *service) GetAllKategori() ([]model.Kategori, error) {
