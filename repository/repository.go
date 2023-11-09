@@ -29,7 +29,7 @@ type Repository interface {
 	DeleteKategori(Id int) error
 	EditKategori(Id int, kategori model.KategoriReq) (model.Kategori, error)
 }
-
+//cleancode uncle bob
 type repository struct {
 	db *sqlx.DB
 }
@@ -307,8 +307,6 @@ func (r *repository) CountTask(Id int) (model.Count, error) {
 
 	return count, err
 }
-
-
 
 // AUTH
 func (r *repository) Regis(email string, HasPassword string) (model.UserRegisRespon, error) {

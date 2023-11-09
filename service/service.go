@@ -174,7 +174,6 @@ func (s *service) SearchTasks(id int, keywoard string, parsedDate time.Time, lim
 	return data, nil
 }
 
-
 func (s *service) CountTask(Id int) (model.Count, error) {
 	data, err := s.repository.CountTask(Id)
 	if err != nil {
