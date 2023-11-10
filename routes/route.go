@@ -33,7 +33,7 @@ func Init() error {
 
 	e.GET("", func(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, map[string]string{
-			"message": "Application is Running",
+			"Message": "Application is Running",
 		})
 	})
 
@@ -50,7 +50,7 @@ func Init() error {
 	task.DELETE("", controller.BulkDeleteTask)
 	task.POST("", controller.SearchTasksFormController)
 	task.GET("/count", controller.CountTask)
-
+	e.POST("/forgot-password", controller.ForgotPasswordHandler)
 	//AUTH
 	e.POST("/login", controller.Login)
 	e.POST("/logout", controller.Logout)

@@ -22,6 +22,8 @@ type Service interface {
 	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
 	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
 	CountTask(Id int) (model.Count, error)
+	sendResetPasswordEmail(toEmail  string) error
+
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
 	CreateKategori(req model.KategoriReq) (model.Kategori, error)
@@ -212,6 +214,26 @@ func (s *service) EditKategori(Id int, req model.KategoriReq) (model.Kategori, e
 func (s *service) DeleteKategori(Id int) error {
 	err := s.repository.DeleteKategori(Id)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+
+
+func sendResetPasswordEmail(toEmail string) error {
+	mailer := gomail.NewMessage()
+	mailer.SetHeader("From", "ajengnikita14@gmail.com") 
+	mailer.SetHeader("To", toEmail)
+	mailer.SetHeader("Subject", "Reset Password")
+	mailer.SetBody("text/html", "Klik <a href='https://localhost:7080/reset-password'>di sini</a> untuk mereset password Anda.")
+
+	
+	dialer := gomail.NewDialer("smtp.gmail.com", 587, "ajengnikita14@gmail.com", "fird jdwa rujm xlyq")
+
+	if err := dialer.DialAndSend(mailer); err != nil {
 		return err
 	}
 

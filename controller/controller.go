@@ -47,7 +47,7 @@ func (c *Controller) GetAlltaskController(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Succesfully Get All Task Data",
+		"Message": "Succesfully Get All Task Data",
 		"data":    task,
 	})
 }
@@ -84,7 +84,7 @@ func (c *Controller) DeleteTasksController(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Task deleted successfully",
+		"Message": "Task deleted successfully",
 	})
 }
 
@@ -105,7 +105,7 @@ func (c *Controller) BulkDeleteTask(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success delete multiple tasks",
+		"Message": "success delete multiple tasks",
 	})
 }
 
@@ -223,7 +223,7 @@ func (c *Controller) UpdateTaskController(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
 		"task":    task,
-		"message": "successfully updated task",
+		"Message": "successfully updated task",
 	})
 }
 
@@ -279,7 +279,6 @@ func (c *Controller) SearchTasksFormController(ctx echo.Context) (err error) {
 		"total_pages": totalPages,
 	})
 }
-
 
 func (c *Controller) CountTask(ctx echo.Context) error {
 	claims := helpers.ClaimToken(ctx)
@@ -447,6 +446,24 @@ func (c *Controller) DeleteKategoriController(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Category deleted successfully",
+		"Message": "Category deleted successfully",
 	})
+}
+
+
+func ForgotPasswordHandler(ctx echo.Context) error {
+	
+	email := ctx.FormValue("email")
+
+	
+	if email == "" {
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Email tidak valid"})
+	}
+
+	if err := service.sendResetPasswordEmail(email); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": "Gagal mengirim email"})
+	}
+
+	
+	return ctx.JSON(http.StatusOK, map[string]string{"message": fmt.Sprintf("Tautan reset password dikirim ke %s", email)})
 }
