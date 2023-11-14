@@ -50,11 +50,13 @@ func Init() error {
 	task.DELETE("", controller.BulkDeleteTask)
 	task.POST("", controller.SearchTasksFormController)
 	task.GET("/count", controller.CountTask)
-	e.POST("/forgot-password", controller.ForgotPasswordHandler)
+	// e.POST("/forgot-password", controller.ForgotPasswordHandler)
 	//AUTH
 	e.POST("/login", controller.Login)
 	e.POST("/logout", controller.Logout)
 	e.POST("/register", controller.RegisterController)
+	e.POST("/forget-password", controller.ForgotPasswordHandler)
+	e.POST("/reset-password", controller.ResetPassword)
 
 	//kategori
 	task.GET("/kategori", controller.GetKategoriController)

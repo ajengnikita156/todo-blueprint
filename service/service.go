@@ -22,7 +22,15 @@ type Service interface {
 	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
 	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
 	CountTask(Id int) (model.Count, error)
-	sendResetPasswordEmail(toEmail  string) error
+	// SendResetPasswordEmail(toEmail  string, token string) error
+	// StoreToken(db *sqlx.DB, email, token string, expirationTime time.Time, id int) error
+	// GetUserByEmail(db *sqlx.DB, email string)  (user model.UserLogRespon, err error)
+
+	GetUserByEmail(email string) (user model.User, err error)
+	StoreToken(token string, expirationTime time.Time, id int) (err error)
+	CekToken(token string) (data model.ForgotPassword, err error)
+	ResetPassword(Password string, Id int) error
+	DeleteToken(token string) error
 
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
@@ -168,7 +176,7 @@ func (s *service) CountTasks(id int, keywoard string, parsedDate time.Time) (int
 }
 
 func (s *service) SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error) {
-    data, err := s.repository.SearchTasks(id, keywoard, parsedDate, limit, offset)
+	data, err := s.repository.SearchTasks(id, keywoard, parsedDate, limit, offset)
 	if err != nil {
 		return []model.TaskRes{}, err
 	}
@@ -222,20 +230,139 @@ func (s *service) DeleteKategori(Id int) error {
 
 
 
+// FORGOT-RESET
 
-func sendResetPasswordEmail(toEmail string) error {
-	mailer := gomail.NewMessage()
-	mailer.SetHeader("From", "ajengnikita14@gmail.com") 
-	mailer.SetHeader("To", toEmail)
-	mailer.SetHeader("Subject", "Reset Password")
-	mailer.SetBody("text/html", "Klik <a href='https://localhost:7080/reset-password'>di sini</a> untuk mereset password Anda.")
+func (s *service) GetUserByEmail(email string) (user model.User, err error) {
+	data, err := s.repository.GetUserByEmail(email)
+	if err != nil {
+		return user, err
+	}
 
-	
-	dialer := gomail.NewDialer("smtp.gmail.com", 587, "ajengnikita14@gmail.com", "fird jdwa rujm xlyq")
+	return data, nil
+}
 
-	if err := dialer.DialAndSend(mailer); err != nil {
+func (s *service) StoreToken(token string, expirationTime time.Time, id int) (err error) {
+	err = s.repository.StoreToken(token, expirationTime, id)
+	if err != nil {
+		return err
+	}
+
+	return
+}
+
+func (s *service) CekToken(token string) (data model.ForgotPassword, err error) {
+	data, err = s.repository.CekToken(token)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *service) ResetPassword(Password string, Id int) error {
+	HasPassword, err := helpers.HashPassword(Password)
+	if err != nil {
+		return err
+	}
+
+	err = s.repository.ResetPassword(HasPassword, Id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) DeleteToken(token string) error {
+	err := s.repository.DeleteToken(token)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
+// func (s *service) StoreToken(db *sqlx.DB, email, token string, expirationTime time.Time, id int) (err error) {
+//     err = s.repository.StoreToken(db, email, token, expirationTime, id)
+//     if err != nil {
+//         return err
+//     }
+
+//     return nil
+// }
+
+// func (s *service) GetUserByEmail (db *sqlx.DB, email string) (user model.UserLogRespon, err error) {
+// 	user, err = s.repository.GetUserByEmail(db, email)
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	return
+// }
+
+// func (s *service) SendResetPasswordEmail(toEmail, token string) error {
+// 	mailer := gomail.NewMessage()
+// 	mailer.SetHeader("From", "ajengnikita14@gmail.com")
+// 	mailer.SetHeader("To", toEmail)
+// 	mailer.SetHeader("Subject", "Reset Password")
+// 	mailer.SetBody("text/html", fmt.Sprintf(`Klik <a href='https://localhost:7080/reset-password?token=%s'>di sini</a> untuk mereset password Anda.
+
+// 	<!DOCTYPE html>
+// 	<html>
+// 	<head>
+// 		<title>Job Acceptance</title>
+// 		<style>
+// 			body {
+// 				font-family: Arial, sans-serif;
+// 			}
+
+// 			.container {
+// 				max-width: 400px;
+// 				margin: 0 auto;
+// 				padding: 20px;
+// 			}
+
+// 			h2 {
+// 				color: #007BFF;
+// 			}
+
+// 			p {
+// 				margin-top: 10px;
+// 			}
+
+// 			.message {
+// 				background-color: #f0f0f0;
+// 				border: 1px solid #ccc;
+// 				padding: 10px;
+// 				margin-top: 20px;
+// 			}
+
+// 			.signature {
+// 				margin-top: 20px;
+// 				font-weight: bold;
+// 			}
+// 		</style>
+// 	</head>
+// 	<body>
+// 		<div class="container">
+// 			<h2>Job Acceptance</h2>
+// 			<p>Dear AJENG NIKITA ANGGRAENI ,</p>
+// 			<p>We are pleased to inform you that you have been accepted for the position of <strong>JOB TITTLE</strong> at our company. Your employment will begin on <strong>10-11-2023</strong>.</p>
+
+// 			<div class="message">
+// 				<p>Klik <a href='https://localhost:8090/reset-password?token=%s'>di sini</a> untuk mereset password Anda</p>
+// 			</div>
+
+// 			<p class="signature">Sincerely,<br>PT. PERUSAHAN</p>
+// 		</div>
+// 	</body>
+// 	</html>
+// 	`, token))
+
+// 	dialer := gomail.NewDialer("smtp.gmail.com", 587, "ajengnikita14@gmail.com", "fird jdwa rujm xlyq")
+
+// 	if err := dialer.DialAndSend(mailer); err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }

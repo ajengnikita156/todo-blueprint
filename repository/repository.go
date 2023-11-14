@@ -23,13 +23,23 @@ type Repository interface {
 	SearchTasks(id int, keywoard string, parsedDate time.Time, limit, offset int) ([]model.TaskRes, error)
 	CountTasks(id int, keywoard string, parsedDate time.Time) (int, error)
 	CountTask(Id int) (model.Count, error)
+	// StoreToken(db *sqlx.DB, email, token string, expirationTime time.Time, id int) error
+	// GetUserByEmail(db *sqlx.DB, email string)  (user model.UserLogRespon, err error)
 	//KATEGORI
 	GetAllKategori() ([]model.Kategori, error)
 	CreateKategori(kategori model.KategoriReq) (model.Kategori, error)
 	DeleteKategori(Id int) error
 	EditKategori(Id int, kategori model.KategoriReq) (model.Kategori, error)
+
+	getUserIDByEmail(email string) (int, error)
+	GetUserByEmail(email string) (user model.User, err error)
+	StoreToken(token string, expirationTime time.Time, id int) (err error)
+	CekToken(token string) (data model.ForgotPassword, err error)
+	ResetPassword(Password string, Id int) error
+	DeleteToken(token string) error
 }
-//cleancode uncle bob
+
+// cleancode uncle bob
 type repository struct {
 	db *sqlx.DB
 }
@@ -57,9 +67,9 @@ func (r *repository) GetUsers() ([]model.User, error) {
 
 		err := rows.Scan(
 			&user.ID,
-			&user.Nama,
+			&user.Name,
 			&user.Email,
-			&user.Umur,
+			&user.Age,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		)
@@ -443,3 +453,109 @@ func (r *repository) DeleteKategori(Id int) error {
 	}
 	return nil
 }
+
+func (r *repository) GetUserByEmail(email string) (user model.User, err error) {
+	var db = r.db
+
+	const statement = `SELECT id FROM users WHERE email = $1`
+	row := db.QueryRowx(statement, email)
+	if err != nil {
+		return
+	}
+
+	err = row.Scan(&user.ID)
+	if err != nil {
+		return
+	}
+
+	return
+
+}
+
+func (r *repository) getUserIDByEmail(email string) (int, error) {
+	var (
+		userID int
+		db     = r.db
+	)
+	query := "SELECT id FROM users WHERE email = $1"
+	err := db.QueryRow(query, email).Scan(&userID)
+	if err != nil {
+		return 0, err
+	}
+
+	return userID, nil
+}
+
+func (r *repository) StoreToken(token string, expirationTime time.Time, id int) (err error) {
+	var db = r.db
+	_, err = db.Exec("INSERT INTO generate_token (user_id, token, expired_at) VALUES ($1, $2, $3)", id, token, expirationTime)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (r *repository) CekToken(token string) (data model.ForgotPassword, err error) {
+	var db = r.db
+
+	query := `SELECT user_id, expired_at FROM generate_token WHERE token = $1`
+	err = db.QueryRow(query, token).Scan(&data.UserId, &data.ExpiredAt)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (r *repository) ResetPassword(Password string, Id int) error {
+	var db = r.db
+
+	query := `UPDATE users SET password = $1 WHERE id = $2`
+
+	_, err := db.Exec(query, Password, Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *repository) DeleteToken(token string) error {
+	var db = r.db
+
+	query := `DELETE FROM generate_token WHERE  token = $1`
+	_, err := db.Exec(query, token)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+// func (r *repository) StoreToken(db *sqlx.DB, email, token string, expirationTime time.Time, id int) (err error) {
+//     _, err = db.Exec("INSERT INTO generate_token (user_id, token, expired_at) VALUES ($1, $2, $3)", id, token, expirationTime)
+//     if err != nil {
+//         return
+//     }
+
+//     return
+// }
+
+// func (r *repository) GetUserByEmail(db *sqlx.DB, email string) (user model.UserLogRespon, err error) {
+// 	const statement = `SELECT id FROM users WHERE email = $1`
+// 	row := db.QueryRowx(statement, email)
+// 	if err != nil {
+// 		return
+// 	}
+// 	err = row.Scan(
+// 		&user.ID,
+// 	)
+// 	if err != nil {
+// 		return
+// 	}
+
+// 	return
+
+// }
